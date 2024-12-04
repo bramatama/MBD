@@ -50,43 +50,48 @@ router.get("/peminjaman", (req, res) => {
                 })
         })
     }
-    if (payload.tipe != 'pegawai'){
-        db.query("call LihatHistorybyID(?)", [payload.user_id], (err, result) => {
-            if (err) {
-                return res.status(500)
-                .json ({
-                    message : "Internal server error",
-                    error : err.message
+    else{
+        if (payload.tipe != 'pegawai'){
+            db.query("call LihatHistorybyID(?)", [payload.user_id], (err, result) => {
+                if (err) {
+                    return res.status(500)
+                    .json ({
+                        message : "Internal server error",
+                        error : err.message
+                    })
+                }
+        
+                const queryResult = result[0]
+                return res
+                .status(200)
+                .json({
+                    message: "Berikut History Peminjaman Anda",
+                    data: queryResult
                 })
-            }
-    
-            const queryResult = result[0]
-            return res
-            .status(200)
-            .json({
-                message: "Berikut History Peminjaman Anda",
-                data: queryResult
-            })
-        })
-    }
-    db.query("call LihatSemuaHistory()", (err, result) => {
-        if (err) {
-            return res.status(500)
-            .json({
-                message: "Internal Server Error",
-                error: err.message,
             })
         }
+        else{
+            db.query("call LihatSemuaHistory()", (err, result) => {
+            if (err) {
+                return res.status(500)
+                .json({
+                    message: "Internal Server Error",
+                    error: err.message,
+                })
+            }
 
-        const queryResult = result [0]
+            const queryResult = result [0]
 
-        return res
-            .status(200)
-            .json({
-                message: "Semua History Peminjaman",
-                data: queryResult
+            return res
+                .status(200)
+                .json({
+                    message: "Semua History Peminjaman",
+                    data: queryResult
+                })
             })
-    })
+        }
+    }
+    
 })
 
 export {router as authRouter}
