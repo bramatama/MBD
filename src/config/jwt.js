@@ -1,6 +1,6 @@
 import jsonwebtoken from 'jsonwebtoken'
 
-const JWT_SECRET_KEY = 'punyaRB'
+const JWT_SECRET_KEY = process.env.JWT_SECRET_KEY
 
 export const jwt = {
     sign: (payload) => {

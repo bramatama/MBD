@@ -95,7 +95,6 @@ router.post("/login", (req, res) => {
             .status(200)
             .json({
                 message: "Login berhasil",
-                data: queryResult
             })
     })
 })

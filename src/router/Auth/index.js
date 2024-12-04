@@ -45,7 +45,7 @@ router.get("/peminjaman", (req, res) => {
             return res
                 .status(200)
                 .json({
-                    message: "History Peminjaman dari " + username,
+                    message: `History Peminjaman dari ${username}`,
                     data: queryResult
                 })
         })
@@ -91,7 +91,6 @@ router.get("/peminjaman", (req, res) => {
             })
         }
     }
-    
 })
 
 export {router as authRouter}
