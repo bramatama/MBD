@@ -5,6 +5,8 @@ import { db } from "../../config/db.js"
 
 const router = express.Router()
 
+
+// daftar
 router.post('/daftar', (req, res) => {
     const body = req.body
 
@@ -48,6 +50,8 @@ router.post('/daftar', (req, res) => {
     })
 })
 
+
+// login
 router.post("/login", (req, res) => {
     const body = req.body
 
@@ -98,6 +102,92 @@ router.post("/login", (req, res) => {
                 data : queryResult
             })
     })
+})
+
+
+// buku
+router.get("/buku", (req, res) => {
+    const judul = req.query.judul
+    const kategori = req.query.kategori
+
+    if (kategori) {
+        if (judul) {
+            db.query("call CariBukudanKategori(?,?)", [kategori, judul], (err, result) => {
+                if (err) {
+                    return res.status(500).json({
+                        message: "Internal Server Error",
+                        error: err.message,
+                    });
+                }
+        
+                const queryResult = result [0]
+        
+                return res
+                    .status(200)
+                    .json({
+                        message: `Buku dengan kategori ${kategori}, Search Bar ${judul}`,
+                        data: queryResult
+                    })
+            })
+        }
+        else{
+            db.query("call LihatBukubyKategori(?)", [kategori], (err,result) => {
+                if (err) {
+                    return res.status(500).json({
+                        message: "Internal Server Error",
+                        error: err.message,
+                    });
+                }
+        
+                const queryResult = result [0]
+        
+                return res
+                    .status(200)
+                    .json({
+                        message: `Semua Buku dengan kategori ${kategori}`,
+                        data: queryResult
+                    })
+            })
+        }
+    }
+    else if (judul) {
+        db.query("call CariBuku(?)", [judul], (err, result) => {
+            if (err) {
+                return res.status(500).json({
+                    message: "Internal Server Error",
+                    error: err.message,
+                });
+            }
+    
+            const queryResult = result [0]
+    
+            return res
+                .status(200)
+                .json({
+                    message: `Search bar ${judul}`,
+                    data: queryResult
+                })
+        })
+    }
+    else{
+        db.query("call LihatSemuaBuku()",(err, result) => {
+            if (err) {
+                return res.status(500).json({
+                    message: "Internal Server Error",
+                    error: err.message,
+                });
+            }
+
+            const queryResult = result [0]
+
+            return res
+                .status(200)
+                .json({
+                    message: `Semua Buku`,
+                    data: queryResult
+                })
+        })
+    }
 })
 
 export {router as nonAuthRouter}
