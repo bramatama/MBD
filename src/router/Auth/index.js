@@ -19,6 +19,100 @@ router.delete("/Logout", (req, res) => {
     })
 })
 
+// pinjam buku
+router.post("/peminjaman", (req,res) => {
+    // const url = window.location.pathname; // misal /buku/2
+    // const id_buku = url.split('/')[2] // 2
+    const payload = res.locals.payload
+    const body = req.body
+
+    const data = [
+        payload.user_id,
+        body.id_buku
+    ]
+
+    if (payload.tipe != 'member'){
+        return res
+            .status(401)
+            .json({
+                message : "Hanya member yang dapat meminjam buku!"
+            })
+    }
+    db.query("call PinjamBuku(?,?)", data, (err, result) => {
+        if (err) {
+            const sqlErrorCode = err.sqlState
+
+            const sqlClientErrors = [
+                "23000",
+                "45000"
+            ]
+
+            if (!sqlClientErrors.includes(sqlErrorCode)) {
+                return res
+                    .status(500)
+                    .json({
+                        message: "Internal Server Error",
+                        error : err.message
+                    })
+            }
+
+            return res
+                .status(400)
+                .json({
+                    message: err.message
+                })
+        }
+
+        const queryResult = result[0]
+
+        return res
+            .status(200)
+            .json({
+                message : "Peminjaman berhasil dilakukan",
+                data : queryResult
+            })
+    })
+
+})
+
+// kembalikan
+router.put("/peminjaman/:id_peminjaman", (req, res) => {
+    const id_peminjaman = req.params.id_peminjaman
+    const payload = res.locals.payload
+
+    if (!Number(id_peminjaman)){
+        return res
+            .status(400)
+            .json({
+                message : "id tidak valid"
+            })
+    }
+    if(payload.tipe != 'pegawai'){
+        return res
+            .status(401)
+            .json({
+                message : "Anda tidak memiliki akses untuk halaman ini"
+            })
+    }
+    db.query('CALL KembalikanBuku(?)', [id_peminjaman], (err,result) => {
+        if (err) {
+            return res.status(500)
+            .json({
+                message: "Internal Server Error",
+                error: err.message,
+            })
+        }
+        const queryResult = result[0]
+
+        return res
+            .status(200)
+            .json({
+                message: "Buku Berhasil Dikembalikan",
+                data: queryResult
+            })
+    })
+})
+
 // history
 router.get("/peminjaman", (req, res) => {
     const username = req.query.username
@@ -52,7 +146,7 @@ router.get("/peminjaman", (req, res) => {
     }
     else{
         if (payload.tipe != 'pegawai'){
-            db.query("call LihatHistorybyID(?)", [payload.user_id], (err, result) => {
+            db.query("call LihatHistorySaya(?)", [payload.user_id], (err, result) => {
                 if (err) {
                     return res.status(500)
                     .json ({
@@ -91,6 +185,44 @@ router.get("/peminjaman", (req, res) => {
             })
         }
     }
+})
+
+// History by ID
+router.get("/peminjaman/:id_peminjaman", (req,res) => {
+    const id_peminjaman = req.params.id_peminjaman
+    const payload = res.locals.payload
+
+    if(!Number(id_peminjaman)){
+        return res
+            .status(400)
+            .json({
+                message : "id tidak valid"
+            })
+    }
+    if(payload.tipe != 'pegawai'){
+        return res
+            .status(401)
+            .json({
+                message : "Anda tidak memiliki akses untuk halaman ini"
+            })
+    }
+    db.query('CALL LihatHistorybyID(?)', [id_peminjaman], (err,result) => {
+        if (err) {
+            return res.status(500)
+            .json({
+                message: "Internal Server Error",
+                error: err.message,
+            })
+        }
+        const queryResult = result[0]
+
+        return res
+            .status(200)
+            .json({
+                message: "Detail Peminjaman berhasil didapatkan",
+                data: queryResult
+            })
+    })
 })
 
 export {router as authRouter}

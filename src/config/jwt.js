@@ -1,6 +1,7 @@
+import { configDotenv } from 'dotenv'
 import jsonwebtoken from 'jsonwebtoken'
 
-const JWT_SECRET_KEY = process.env.JWT_SECRET_KEY
+const JWT_SECRET_KEY = 'PunyaRB'
 
 export const jwt = {
     sign: (payload) => {

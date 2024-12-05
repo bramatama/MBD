@@ -1,12 +1,10 @@
 import express from 'express'
 import cookieParser from 'cookie-parser'
-require('dotenv').config();
 
 import { jwt } from './config/jwt.js'
 import {authRouter} from './router/Auth/index.js'
 import {nonAuthRouter} from './router/Non Auth/index.js'
 
-const PORT = process.env.PORT || 3000;
 const app = express()
 
 app.use(express.json())
@@ -37,6 +35,6 @@ app.use((req, res, next) => {
 
 app.use(authRouter)
 
-app.listen(PORT, () => {
-    console.log(`Server listening on port ${PORT}`)
+app.listen(4000, () => {
+    console.log(`Server listening on port 4000`)
 })
