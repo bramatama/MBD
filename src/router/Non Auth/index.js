@@ -190,4 +190,33 @@ router.get("/buku", (req, res) => {
     }
 })
 
+router.get("/buku/:id_buku", (req,res) => {
+    const id_buku = req.params.id_buku
+    
+    if (!Number(id_buku)){
+        return res
+            .status(400)
+            .json({
+                message : "id tidak valid"
+            })
+    }
+    db.query("CALL BukubyID(?)", [id_buku], (err,result) => {
+        if (err) {
+            return res.status(500).json({
+                message: "Internal Server Error",
+                error: err.message,
+            });
+        }
+
+        const queryResult = result [0]
+
+        return res
+            .status(200)
+            .json({
+                message: `Berikut Buku yang anda Pilih`,
+                data: queryResult
+            })
+    })
+})
+
 export {router as nonAuthRouter}

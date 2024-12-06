@@ -96,11 +96,27 @@ router.put("/peminjaman/:id_peminjaman", (req, res) => {
     }
     db.query('CALL KembalikanBuku(?)', [id_peminjaman], (err,result) => {
         if (err) {
-            return res.status(500)
-            .json({
-                message: "Internal Server Error",
-                error: err.message,
-            })
+            const sqlErrorCode = err.sqlState
+
+            const sqlClientErrors = [
+                "23000",
+                "45000"
+            ]
+
+            if (!sqlClientErrors.includes(sqlErrorCode)) {
+                return res
+                    .status(500)
+                    .json({
+                        message: "Internal Server Error",
+                        error : err.message
+                    })
+            }
+
+            return res
+                    .status(400)
+                    .json({
+                        message: err.message
+                    })
         }
         const queryResult = result[0]
 
@@ -113,85 +129,73 @@ router.put("/peminjaman/:id_peminjaman", (req, res) => {
     })
 })
 
-// buku
-router.get("/buku", (req, res) => {
-    const judul = req.query.judul
-    const kategori = req.query.kategori
+// tambah buku
+router.post("/buku", (req,res) => {
+    const body = req.body
+    const payload = res.locals.payload
 
-    if (kategori) {
-        if (judul) {
-            db.query("call CariBukudanKategori(?,?)", [kategori, judul], (err, result) => {
-                if (err) {
-                    return res.status(500).json({
-                        message: "Internal Server Error",
-                        error: err.message,
-                    });
-                }
-        
-                const queryResult = result [0]
-        
-                return res
-                    .status(200)
-                    .json({
-                        message: `Buku dengan kategori ${kategori}, Search Bar ${judul}`,
-                        data: queryResult
-                    })
-            })
-        }
-        db.query("call LihatBukubyKategori(?)", [kategori], (err,result) => {
-            if (err) {
-                return res.status(500).json({
-                    message: "Internal Server Error",
-                    error: err.message,
-                });
-            }
-    
-            const queryResult = result [0]
-    
-            return res
-                .status(200)
-                .json({
-                    message: `Semua Buku dengan kategori ${kategori}`,
-                    data: queryResult
-                })
-        })
-    }
-    if (judul) {
-        db.query("call CariBuku(?)", [judul], (err, result) => {
-            if (err) {
-                return res.status(500).json({
-                    message: "Internal Server Error",
-                    error: err.message,
-                });
-            }
-    
-            const queryResult = result [0]
-    
-            return res
-                .status(200)
-                .json({
-                    message: `Search bar ${judul}`,
-                    data: queryResult
-                })
-        })
-    }
-    db.query("call LihatSemuaBuku()",(err, result) => {
-        if (err) {
-            return res.status(500).json({
-                message: "Internal Server Error",
-                error: err.message,
-            });
-        }
+    const data = [
+        body.judul,
+        body.penulis,
+        body.penerbit,
+        body.tahun_terbit,
+        body.kategori,
+        body.stok
+    ]
 
-        const queryResult = result [0]
-
+    if(payload.tipe != 'admin'){
         return res
-            .status(200)
+            .status(401)
             .json({
-                message: `Semua Buku`,
-                data: queryResult
+                message : 'Anda tidak memiliki akses untuk halaman ini'
             })
-    })
+    }
+    else{
+        db.query('call TambahBukuBaru(?,?,?,?,?,?)', data, (err,result) => {
+            if (err) {
+                const sqlErrorCode = err.sqlState
+
+                const sqlClientErrors = [
+                    "23000",
+                    "45000"
+                ]
+
+                if (!sqlClientErrors.includes(sqlErrorCode)) {
+                    return res
+                        .status(500)
+                        .json({
+                            message: "Internal Server Error",
+                            error : err.message
+                        })
+                }
+
+                return res
+                        .status(400)
+                        .json({
+                            message: err.message
+                        })
+            }
+
+            const queryResult = result[0][0]
+
+            return res
+                .status(200)
+                .json({
+                    message : 'Buku berhasil ditambahkan',
+                    data : queryResult
+                })
+        })
+    }
+})
+// edit data buku
+router.patch("buku/:id_buku", (req,res) => {
+    const id_buku = req.params.id_buku
+    const payload = res.locals.payload
+    const body = req.body
+
+    const data = [
+        body.
+    ]
 })
 
 // history
