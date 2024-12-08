@@ -27,7 +27,6 @@ app.use((req, res, next) => {
         return
     }
 
-    // biar payload bisa dipanggil di endpoint lain
     res.locals.payload = payload
 
     next()
