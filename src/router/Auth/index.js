@@ -5,7 +5,7 @@ import { db } from "../../config/db.js"
 const router = express.Router()
 
 // logout
-router.delete("/Logout", (req, res) => {
+router.delete("/logout", (req, res) => {
     res.cookie(
         "token",
         "",
@@ -72,7 +72,6 @@ router.post("/peminjaman", (req,res) => {
                 data : queryResult
             })
     })
-
 })
 
 // kembalikan
@@ -147,7 +146,7 @@ router.post("/buku", (req,res) => {
         return res
             .status(401)
             .json({
-                message : 'Anda tidak memiliki akses untuk halaman ini'
+                message : 'Anda tidak memiliki akses untuk fungsi ini'
             })
     }
     else{
@@ -187,15 +186,137 @@ router.post("/buku", (req,res) => {
         })
     }
 })
+
 // edit data buku
-router.patch("buku/:id_buku", (req,res) => {
+router.patch("/buku/:id_buku", (req,res) => {
     const id_buku = req.params.id_buku
     const payload = res.locals.payload
     const body = req.body
 
+    if(!Number(id_buku)){
+        return res
+            .status(400)
+            .json({
+                message : "id tidak valid"
+            })
+    }
+
     const data = [
-        body.
+        id_buku,
+        body.judul_pengganti,
+        body.penulis_pengganti,
+        body.penerbit_pengganti,
+        body.tahun_terbit,
+        body.kategori_pengganti
     ]
+
+    if(payload.tipe != 'admin'){
+        return res
+            .status(401)
+            .json({
+                message : "Anda tidak memiliki akses untuk fungsi ini"
+            })
+    }
+    else{
+        db.query('call EditDataBuku(?,?,?,?,?,?)', data, (err, result) => {
+            if (err) {
+                const sqlErrorCode = err.sqlState
+
+                const sqlClientErrors = [
+                    "23000",
+                    "45000"
+                ]
+
+                if (!sqlClientErrors.includes(sqlErrorCode)) {
+                    return res
+                        .status(500)
+                        .json({
+                            message: "Internal Server Error",
+                            error : err.message
+                        })
+                }
+
+                return res
+                        .status(400)
+                        .json({
+                            message: err.message
+                        })
+            }
+
+            const queryResult = result[0][0]
+
+            return res
+                .status(200)
+                .json({
+                    message : 'Buku berhasil diedit',
+                    data : queryResult
+                })
+        })
+    }
+})
+
+// tambah stok buku
+router.patch("/buku/:id_buku/tambah", (req,res) => {
+    const id_buku = req.params.id_buku
+    const payload = res.locals.payload
+    const body = req.body
+
+    if(!Number(id_buku)){
+        return res
+            .status(400)
+            .json({
+                message : "id tidak valid"
+            })
+    }
+
+    const data = [
+        id_buku,
+        body.stok_tambahan
+    ]
+
+    if (payload.tipe != "admin"){
+        return res
+            .status(401)
+            .json({
+                message : "Anda tidak memiliki akses untuk fitur ini"
+            })
+    }
+    else {
+        db.query('CALL TambahStokBuku(?,?)', data, (err,result) => {
+            if(err){
+                const sqlErrorCode = err.sqlState
+
+                const sqlClientErrors = [
+                    "23000",
+                    "45000"
+                ]
+
+                if (!sqlClientErrors.includes(sqlErrorCode)) {
+                    return res
+                        .status(500)
+                        .json({
+                            message: "Internal Server Error",
+                            error : err.message
+                        })
+                }
+
+                return res
+                        .status(400)
+                        .json({
+                            message: err.message
+                        })
+            }
+
+            const queryResult = result[0][0]
+
+            return res
+                .status(200)
+                .json({
+                    message : 'Stok buku berhasil ditambahkan',
+                    data : queryResult
+                })
+        })
+    }
 })
 
 // history
@@ -213,10 +334,27 @@ router.get("/peminjaman", (req, res) => {
         }
         db.query("call LihatHistorybyUsername(?)",[username], (err, result) => {
             if (err) {
-                return res.status(500).json({
-                    message: "Internal Server Error",
-                    error: err.message,
-                });
+                const sqlErrorCode = err.sqlState
+
+                const sqlClientErrors = [
+                    "23000",
+                    "45000"
+                ]
+
+                if (!sqlClientErrors.includes(sqlErrorCode)) {
+                    return res
+                        .status(500)
+                        .json({
+                            message: "Internal Server Error",
+                            error : err.message
+                        })
+                }
+
+                return res
+                        .status(400)
+                        .json({
+                            message: err.message
+                        })
             }
     
             const queryResult = result [0]
@@ -230,14 +368,30 @@ router.get("/peminjaman", (req, res) => {
         })
     }
     else{
-        if (payload.tipe != 'pegawai'){
+        if (payload.tipe == "member"){
             db.query("call LihatHistorySaya(?)", [payload.user_id], (err, result) => {
                 if (err) {
-                    return res.status(500)
-                    .json ({
-                        message : "Internal server error",
-                        error : err.message
-                    })
+                    const sqlErrorCode = err.sqlState
+
+                const sqlClientErrors = [
+                    "23000",
+                    "45000"
+                ]
+
+                if (!sqlClientErrors.includes(sqlErrorCode)) {
+                    return res
+                        .status(500)
+                        .json({
+                            message: "Internal Server Error",
+                            error : err.message
+                        })
+                }
+
+                return res
+                        .status(400)
+                        .json({
+                            message: err.message
+                        })
                 }
         
                 const queryResult = result[0]
@@ -249,14 +403,30 @@ router.get("/peminjaman", (req, res) => {
                 })
             })
         }
-        else{
+        else if(payload.tipe == 'pegawai'){
             db.query("call LihatSemuaHistory()", (err, result) => {
             if (err) {
-                return res.status(500)
-                .json({
-                    message: "Internal Server Error",
-                    error: err.message,
-                })
+                const sqlErrorCode = err.sqlState
+
+                const sqlClientErrors = [
+                    "23000",
+                    "45000"
+                ]
+
+                if (!sqlClientErrors.includes(sqlErrorCode)) {
+                    return res
+                        .status(500)
+                        .json({
+                            message: "Internal Server Error",
+                            error : err.message
+                        })
+                }
+
+                return res
+                        .status(400)
+                        .json({
+                            message: err.message
+                        })
             }
 
             const queryResult = result [0]
@@ -268,6 +438,13 @@ router.get("/peminjaman", (req, res) => {
                     data: queryResult
                 })
             })
+        }
+        else {
+            return res
+                .status(401)
+                .json({
+                    message : "Anda tidak memiliki akses untuk halaman ini"
+                })
         }
     }
 })
@@ -293,11 +470,27 @@ router.get("/peminjaman/:id_peminjaman", (req,res) => {
     }
     db.query('CALL LihatHistorybyID(?)', [id_peminjaman], (err,result) => {
         if (err) {
-            return res.status(500)
-            .json({
-                message: "Internal Server Error",
-                error: err.message,
-            })
+            const sqlErrorCode = err.sqlState
+
+                const sqlClientErrors = [
+                    "23000",
+                    "45000"
+                ]
+
+                if (!sqlClientErrors.includes(sqlErrorCode)) {
+                    return res
+                        .status(500)
+                        .json({
+                            message: "Internal Server Error",
+                            error : err.message
+                        })
+                }
+
+                return res
+                        .status(400)
+                        .json({
+                            message: err.message
+                        })
         }
         const queryResult = result[0]
 
@@ -308,6 +501,144 @@ router.get("/peminjaman/:id_peminjaman", (req,res) => {
                 data: queryResult
             })
     })
+})
+
+// buat wishlist
+router.post("/wishlist", (req,res) => {
+    // const url = window.location.pathname; // misal /buku/2
+    // const id_buku = url.split('/')[2] // 2
+    const payload = res.locals.payload
+    const body = req.body
+
+    const data = [
+        payload.user_id,
+        body.id_buku
+    ]
+
+    if (payload.tipe != 'member'){
+        return res
+            .status(401)
+            .json({
+                message : "Hanya member yang dapat membuat wishlist!"
+            })
+    }
+    db.query("call BuatWishlist(?,?)", data, (err, result) => {
+        if (err) {
+            const sqlErrorCode = err.sqlState
+
+            const sqlClientErrors = [
+                "23000",
+                "45000"
+            ]
+
+            if (!sqlClientErrors.includes(sqlErrorCode)) {
+                return res
+                    .status(500)
+                    .json({
+                        message: "Internal Server Error",
+                        error : err.message
+                    })
+            }
+
+            return res
+                .status(400)
+                .json({
+                    message: err.message
+                })
+        }
+
+        const queryResult = result[0]
+
+        return res
+            .status(200)
+            .json({
+                message : "Buku berhasil ditambahkan ke wishlist",
+                data : queryResult
+            })
+    })
+})
+
+router.get("/wishlist", (req, res) => {
+    const payload = res.locals.payload
+
+    if (payload.tipe == 'member'){
+        db.query("call LihatWishlistSaya(?)", [payload.user_id], (err, result) => {
+            if (err) {
+                const sqlErrorCode = err.sqlState
+
+            const sqlClientErrors = [
+                "23000",
+                "45000"
+            ]
+
+            if (!sqlClientErrors.includes(sqlErrorCode)) {
+                return res
+                    .status(500)
+                    .json({
+                        message: "Internal Server Error",
+                        error : err.message
+                    })
+            }
+
+            return res
+                    .status(400)
+                    .json({
+                        message: err.message
+                    })
+            }
+    
+            const queryResult = result[0]
+            return res
+            .status(200)
+            .json({
+                message: "Berikut Daftar Wishlist Anda",
+                data: queryResult
+            })
+        })
+    }
+    else if (payload.tipe == 'pegawai') {
+        db.query("call LihatSemuaWishlist()", (err, result) => {
+        if (err) {
+            const sqlErrorCode = err.sqlState
+
+            const sqlClientErrors = [
+                "23000",
+                "45000"
+            ]
+
+            if (!sqlClientErrors.includes(sqlErrorCode)) {
+                return res
+                    .status(500)
+                    .json({
+                        message: "Internal Server Error",
+                        error : err.message
+                    })
+            }
+
+            return res
+                    .status(400)
+                    .json({
+                        message: err.message
+                    })
+        }
+
+        const queryResult = result [0]
+
+        return res
+            .status(200)
+            .json({
+                message: "Daftar Semua Wishlist",
+                data: queryResult
+            })
+        })
+    }
+    else {
+        return res
+            .status(401)
+            .json({
+                message : "Anda tidak memiliki akses untuk halaman ini"
+            })
+    }
 })
 
 export {router as authRouter}
