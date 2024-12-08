@@ -7,7 +7,7 @@ const router = express.Router()
 
 
 // daftar
-router.post('/daftar', (req, res) => {
+router.post('/auth/daftar', (req, res) => {
     const body = req.body
 
     const data = [
@@ -52,7 +52,7 @@ router.post('/daftar', (req, res) => {
 
 
 // login
-router.post("/login", (req, res) => {
+router.post("/auth/login", (req, res) => {
     const body = req.body
 
     const data = [

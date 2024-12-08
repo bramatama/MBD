@@ -5,7 +5,7 @@ import { db } from "../../config/db.js"
 const router = express.Router()
 
 // logout
-router.delete("/logout", (req, res) => {
+router.delete("/auth/logout", (req, res) => {
     res.cookie(
         "token",
         "",
